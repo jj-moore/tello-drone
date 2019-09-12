@@ -1,4 +1,5 @@
 import sys
+import signal
 import traceback
 import tellopy
 import av
@@ -6,10 +7,12 @@ import cv2.cv2 as cv2  # for avoidance of pylint error
 import numpy
 import pygame
 import pygame.locals
+import pygame.key
 from subprocess import Popen, PIPE
 import threading
 import time
 
+js_name = None
 buttons = None
 drone = None
 reset = False
@@ -55,7 +58,7 @@ class JoystickPS3:
     LEFT_Y_REVERSE = -1.0
     RIGHT_X_REVERSE = 1.0
     RIGHT_Y_REVERSE = -1.0
-    DEADZONE = 0.1
+    DEADZONE = 0.01
 
 
 class JoystickPS4:
@@ -119,6 +122,7 @@ class JoystickPS4ALT:
     RIGHT_Y_REVERSE = -1.0
     DEADZONE = 0.08
 
+
 class JoystickF310:
     # d-pad
     UP = -1  # UP
@@ -148,6 +152,7 @@ class JoystickF310:
     RIGHT_X_REVERSE = 1.0
     RIGHT_Y_REVERSE = -1.0
     DEADZONE = 0.08
+
 
 class JoystickXONE:
     # d-pad
@@ -222,6 +227,16 @@ class CustomController:
     BACKWARD = None
     RIGHT = None
     LEFT = None
+    DEADZONE = 0.1
+    LEFT_X = None
+    LEFT_Y = None
+    RIGHT_X = None
+    RIGHT_Y = None
+    LEFT_X_REVERSE = 1.0
+    LEFT_Y_REVERSE = 1.0
+    RIGHT_X_REVERSE = 1.0
+    RIGHT_Y_REVERSE = 1.0
+
 
     def __init__(self, control_set):
         number_of_controls = len(control_set)
@@ -247,45 +262,17 @@ class CustomController:
 
 
 def main():
-    global new_image
-    global run_recv_thread
-    global drone
-    global current_image
-
     pygame.init()
-
     get_buttons()
-    drone = tellopy.Tello()
-    drone.connect()
-    drone.subscribe(drone.EVENT_FLIGHT_DATA, handler)
-    threading.Thread(target=recv_thread, args=[drone]).start()
-    try:
-        while 1:
-            # loop with pygame.event.get() is too much tight w/o some sleep
-            time.sleep(0.01)
-            for e in pygame.event.get():
-                handle_input_event(drone, e)
-            if current_image is not new_image:
-                cv2.imshow('Tello', new_image)
-                current_image = new_image
-                cv2.waitKey(1)
-    except KeyboardInterrupt as e:
-        print(e)
-    except Exception as e:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(exc_type, exc_value, exc_traceback)
-        print(e)
-
-    run_recv_thread = False
-    cv2.destroyAllWindows()
-    drone.quit()
-    exit(1)
-
+    setup_drone()
+    run()
+    stop()
 
 
 def get_buttons():
     global buttons
     global reset
+    global js_name
 
     try:
         js = pygame.joystick.Joystick(0)
@@ -302,68 +289,80 @@ def get_buttons():
             buttons = JoystickF310
         elif js_name == 'Xbox One Wired Controller':
             buttons = JoystickXONE
-        elif js_name == 'Controller (Xbox o' \
-                        'ne For Windows)':
+        elif js_name == 'Controller (Xbox One For Windows)':
             buttons = JoystickXONE
         elif js_name == 'FrSky Taranis Joystick':
             buttons = JoystickTARANIS
     except pygame.error:
         pass
 
-    if buttons is None:
+
+    if buttons is None and js_name is not None:
         print('No supported controller found, initializing custom controller.')
         while True:
-            new_controller()
+            new_controller(js)
             if not reset:
                 break
             reset = False
 
 
-def new_controller():
+def new_controller(js):
     global buttons
+    global added
 
     print('This is a set up for your controller. If at anytime you want to restart, simply press the Takeoff button. '
           'After setting a Takeoff and Land button, press the Land button to finalize the selected buttons.')
-    controlSet = []
+    control_set = []
     print('Select Takeoff button.')
-    controlSet.append(get_input())
+    control_set.append(get_input())
 
     controls = ['Land', 'Up', 'Down', 'Rotate right', 'Rotate left', 'Forward', 'Backward', 'Right', 'Left']
 
     for action in controls:
         while True:
-            add_control(action, controlSet)
+            added = True
+            add_control(action, control_set)
             if added:
                 break
         if reset:
-            controlSet.clear()
+            control_set.clear()
             return
         if finalize:
             break
 
-    buttons = CustomController(controlSet)
+    buttons = CustomController(control_set)
+    set_deadzone()
+
+#wrong number of joysticks
+    number_of_joystick = js.get_numaxes()
+    print(number_of_joystick)
+    if number_of_joystick is 1:
+        setup_one_joystick()
+    elif number_of_joystick >=2:
+        setup_two_joystick()
 
 
-def add_control(action, list):
+
+def add_control(action, control_set):
     global reset
     global finalize
     global added
 
-    print('Select ' + action + 'button.')
+    print('Select ' + action + ' button.')
     control = get_input()
-    if control == list[0]:
+    if control == control_set[0]:
         reset = True
-    if len(list) > 1:
-        if control == list[1]:
+    if len(control_set) > 1:
+        if control == control_set[1]:
             finalize = True
 
     if not finalize and not reset:
-        for items in list:
+        for items in control_set:
             if control == items:
                 print('Repeated button value, try again')
                 added = False
 
-    list.append(control)
+    control_set.append(control)
     return True
 
 
@@ -372,37 +371,160 @@ def get_input():
     pygame.event.wait()
     while True:
         for e in pygame.event.get():
+           # if abs(e.value) > .1:
+          #      print(e.axis)
             if e.type == pygame.locals.JOYBUTTONDOWN:
                 return e.button
+
+
+def setup_one_joystick():
+    print('Push joystick up')
+    left_y_list = get_axis()
+    buttons.LEFT_Y = left_y_list[0]
+    if left_y_list[1] < 0:
+        buttons.LEFT_Y_REVERSE = -1
+
+    print('Push joystick to the right')
+    left_x_list = get_axis()
+    buttons.LEFT_X = left_x_list[0]
+    if left_x_list[1] < 0:
+        buttons.LEFT_X_REVERSE = -1
+
+    print(buttons.LEFT_Y)
+    print(buttons.LEFT_Y_REVERSE)
+    print(buttons.LEFT_X)
+    print(buttons.LEFT_X_REVERSE)
+
+
+def setup_two_joystick():
+    print('Push left joystick up')
+    left_y_list = get_axis()
+    buttons.LEFT_Y = left_y_list[0]
+    if left_y_list[1] < 0:
+        buttons.LEFT_Y_REVERSE = -1
+
+    print('Push left joystick to the right')
+    left_x_list = get_axis()
+    buttons.LEFT_X = left_x_list[0]
+    if left_x_list[1] < 0:
+        buttons.LEFT_X_REVERSE = -1
+
+    print('Push right joystick up')
+    right_y_list = get_axis()
+    buttons.RIGHT_Y = right_y_list[0]
+    if right_y_list[1] < 0:
+        buttons.RIGHT_Y_REVERSE = -1
+
+    print('Push right joystick to the right')
+    right_x_list = get_axis()
+    buttons.RIGHT_X = right_x_list[0]
+    if right_x_list[1] < 0:
+        buttons.RIGHT_X_REVERSE = -1
+
+    print(buttons.LEFT_Y)
+    print(buttons.LEFT_Y_REVERSE)
+    print(buttons.LEFT_X)
+    print(buttons.LEFT_X_REVERSE)
+    print(buttons.RIGHT_Y)
+    print(buttons.RIGHT_Y_REVERSE)
+    print(buttons.RIGHT_X)
+    print(buttons.RIGHT_X_REVERSE)
+
+
+def get_axis():
+    count = 500
+    sum = 0
+    values = []
+    last_val = 0
+    time.sleep(1)
+    pygame.event.clear()
+    pygame.event.wait()
+    while True:
+        for e in pygame.event.get():
+            if e.type == pygame.locals.JOYAXISMOTION:
+                if -buttons.DEADZONE <= e.value <= buttons.DEADZONE:
+                    e.value = 0
+                if e.value != 0:
+                    val = abs(e.value)
+                    if (val - last_val) > 0:
+                        values.append(e.axis)
+                        sum = sum + e.value
+                        count = count - 1
+                        if count < 0:
+                            break
+                    last_val = val
+        if count < 0:
+            break
+    print('Done')
+
+    max_i = 0
+    set_values = set(values)
+    print(set_values)
+    for value in set_values:
+        i = 0
+        for item in values:
+            if value == item:
+                i = i + 1
+        if i > max_i:
+            max_i = i
+            axis = value
+
+    answer = [axis, sum]
+    return answer
+
+
+def set_deadzone():
+    print('Please do not press any buttons or touch any joysticks...')
+    time.sleep(1)
+
+    max = 0
+    count = 1000
+    pygame.event.clear()
+    pygame.event.wait()
+    while True:
+        for e in pygame.event.get():
+            if e.type == pygame.locals.JOYAXISMOTION:
+                if abs(e.value) > max:
+                    max = e.value
+                count = count - 1
+                if count < 0:
+                    break
+        if count < 0:
+            break
+
+    print('Done')
+    if abs(max) > .01:
+        buttons.DEADZONE = abs(max)
+
+
+def setup_drone():
+    global drone
+
+    drone = tellopy.Tello()
+    drone.connect()
+    drone.subscribe(drone.EVENT_FLIGHT_DATA, handler)
+    threading.Thread(target=recv_thread, args=[drone]).start()
 
 
 def recv_thread(drone):
     global run_recv_thread
     global new_image
     global flight_data
+    global current_image
 
-    print('start recv_thread()')
     try:
         container = av.open(drone.get_video_stream())
-        print('1')
-        # skip first 300 frames
-        frame_skip = 300
-        while True:
+        while run_recv_thread:
             for frame in container.decode(video=0):
-                if 0 < frame_skip:
-                    frame_skip = frame_skip - 1
-                    continue
-                start_time = time.time()
-                image = cv2.cvtColor(numpy.array(frame.to_image()), cv2.COLOR_RGB2BGR)
-
+                new_image = cv2.cvtColor(numpy.array(frame.to_image()), cv2.COLOR_RGB2BGR)
                 if flight_data:
-                    draw_text(image, 'TelloPy: joystick_and_video ' + str(flight_data), 0)
-                new_image = image
-                if frame.time_base < 1.0/60:
-                    time_base = 1.0/60
-                else:
-                    time_base = frame.time_base
-                frame_skip = int((time.time() - start_time)/time_base)
+                    draw_text(new_image, 'TelloPy: ' + str(flight_data), 0)
+                if current_image is not new_image:
+                    cv2.imshow('Tello', new_image)
+                    current_image = new_image
+                    cv2.waitKey(1)
+    except KeyboardInterrupt:
+        stop()
     except Exception as ex:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -426,15 +548,23 @@ def draw_text(image, text, row):
     cv2.putText(image, text, pos, font, font_scale, font_color, 1)
 
 
+def update(old, new, max_delta=0.3):
+    if abs(old - new) <= max_delta:
+        res = new
+    else:
+        res = 0.0
+    return res
+
+
 def handle_input_event(drone, e):
     global speed
     global throttle
     global yaw
     global pitch
     global roll
-    if e.type == pygame.locals.JOYAXISMOTION and type(buttons) != CustomController:
+    if e.type == pygame.locals.JOYAXISMOTION:
         # ignore small input values (Deadzone)
-        if -buttons.DEADZONE <= e.value and e.value <= buttons.DEADZONE:
+        if -buttons.DEADZONE <= e.value <= buttons.DEADZONE:
             e.value = 0.0
         if e.axis == buttons.LEFT_Y:
             throttle = update(throttle, e.value * buttons.LEFT_Y_REVERSE)
@@ -449,7 +579,7 @@ def handle_input_event(drone, e):
         if e.axis == buttons.RIGHT_X:
             roll = update(roll, e.value * buttons.RIGHT_X_REVERSE)
             drone.set_roll(roll)
-    elif e.type == pygame.locals.JOYHATMOTION and type(buttons) != CustomController:
+    elif e.type == pygame.locals.JOYHATMOTION:
         if e.value[0] < 0:
             drone.counter_clockwise(speed)
         if e.value[0] == 0:
@@ -509,16 +639,48 @@ def handle_input_event(drone, e):
 def handler(event, sender, data, **args):
     global prev_flight_data
     global flight_data
-    global log_data
+    global drone
+
     drone = sender
     if event is drone.EVENT_FLIGHT_DATA:
-        if prev_flight_data != str(data):
-            print(data)
-            prev_flight_data = str(data)
+        #if prev_flight_data != str(data):
+        print(data)
+        prev_flight_data = str(data)
         flight_data = data
     else:
         print('event="%s" data=%s' % (event.getname(), str(data)))
 
 
+def run():
+    global current_image
+    global new_image
+    global js_name
+
+    try:
+        while 1:
+            # loop with pygame.event.get() is too much tight w/o some sleep
+            time.sleep(0.01)
+            for e in pygame.event.get():
+                    handle_input_event(drone, e)
+    except KeyboardInterrupt as e:
+        print(e)
+        stop()
+    except Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_exception(exc_type, exc_value, exc_traceback)
+        print(e)
+
+
+def stop():
+    global run_recv_thread
+    global drone
+
+    run_recv_thread = False
+    cv2.destroyAllWindows()
+    drone.quit()
+    exit(1)
+
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, stop)
     main()
