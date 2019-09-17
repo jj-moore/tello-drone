@@ -279,7 +279,7 @@ def get_buttons():
         js.init()
         js_name = js.get_name()
         print('Joystick name: ' + js_name)
-        if js_name in ('wireless Controller', 'Sony Computer Entertainment Wireless Controller'):
+        if js_name in ('Wireless Controller', 'Sony Computer Entertainment Wireless Controller'):
             buttons = JoystickPS4
         elif js_name == 'Sony Interactive Entertainment Wireless Controller':
             buttons = JoystickPS4ALT
@@ -289,7 +289,7 @@ def get_buttons():
             buttons = JoystickF310
         elif js_name == 'Xbox One Wired Controller':
             buttons = JoystickXONE
-        elif js_name == 'controller (Xbox One For Windows)':
+        elif js_name == 'Controller (Xbox One For Windows)':
             buttons = JoystickXONE
         elif js_name == 'FrSky Taranis Joystick':
             buttons = JoystickTARANIS
