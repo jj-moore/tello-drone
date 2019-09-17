@@ -289,7 +289,7 @@ def get_buttons():
             buttons = JoystickF310
         elif js_name == 'Xbox One Wired Controller':
             buttons = JoystickXONE
-        elif js_name == 'Controller (Xbox One For Windows)':
+        elif js_name == 'controller (Xbox One For Windows)':
             buttons = JoystickXONE
         elif js_name == 'FrSky Taranis Joystick':
             buttons = JoystickTARANIS
@@ -333,13 +333,14 @@ def new_controller(js):
     buttons = CustomController(control_set)
     set_deadzone()
 
-#wrong number of joysticks
     number_of_joystick = js.get_numaxes()
-    print(number_of_joystick)
-    if number_of_joystick is 1:
-        setup_one_joystick()
-    elif number_of_joystick >=2:
+    if number_of_joystick != 0:
+        print('Time to set up the joystick(s) if at any point you decide to not set up a joystick just press'
+              'the Takeoff button.')
+    if number_of_joystick >= 4:
         setup_two_joystick()
+    elif number_of_joystick != 0:
+        setup_one_joystick()
 
 
 
@@ -378,60 +379,47 @@ def get_input():
 
 
 def setup_one_joystick():
-    print('Push joystick up')
+    print('Push joystick back and forth between center and up.')
     left_y_list = get_axis()
     buttons.LEFT_Y = left_y_list[0]
     if left_y_list[1] < 0:
         buttons.LEFT_Y_REVERSE = -1
 
-    print('Push joystick to the right')
+    print('Push joystick back and forth between center and to the right')
     left_x_list = get_axis()
     buttons.LEFT_X = left_x_list[0]
     if left_x_list[1] < 0:
         buttons.LEFT_X_REVERSE = -1
-
-    print(buttons.LEFT_Y)
-    print(buttons.LEFT_Y_REVERSE)
-    print(buttons.LEFT_X)
-    print(buttons.LEFT_X_REVERSE)
 
 
 def setup_two_joystick():
-    print('Push left joystick up')
+    print('Push left joystick back and forth between center and up')
     left_y_list = get_axis()
     buttons.LEFT_Y = left_y_list[0]
     if left_y_list[1] < 0:
         buttons.LEFT_Y_REVERSE = -1
 
-    print('Push left joystick to the right')
+    print('Push left joystick back and forth between center and to the right')
     left_x_list = get_axis()
     buttons.LEFT_X = left_x_list[0]
     if left_x_list[1] < 0:
         buttons.LEFT_X_REVERSE = -1
 
-    print('Push right joystick up')
+    print('Push right joystick back and forth between center and up')
     right_y_list = get_axis()
     buttons.RIGHT_Y = right_y_list[0]
     if right_y_list[1] < 0:
         buttons.RIGHT_Y_REVERSE = -1
 
-    print('Push right joystick to the right')
+    print('Push right joystick back and forth between center to the right')
     right_x_list = get_axis()
     buttons.RIGHT_X = right_x_list[0]
     if right_x_list[1] < 0:
         buttons.RIGHT_X_REVERSE = -1
 
-    print(buttons.LEFT_Y)
-    print(buttons.LEFT_Y_REVERSE)
-    print(buttons.LEFT_X)
-    print(buttons.LEFT_X_REVERSE)
-    print(buttons.RIGHT_Y)
-    print(buttons.RIGHT_Y_REVERSE)
-    print(buttons.RIGHT_X)
-    print(buttons.RIGHT_X_REVERSE)
-
 
 def get_axis():
+    stop = False
     count = 500
     sum = 0
     values = []
@@ -453,13 +441,18 @@ def get_axis():
                         if count < 0:
                             break
                     last_val = val
-        if count < 0:
+            elif e.type == pygame.locals.JOYBUTTONDOWN:
+                if e.button == buttons.TAKEOFF:
+                    stop = True
+        if count < 0 or stop:
             break
     print('Done')
 
+    if stop:
+        return [None, 1]
+
     max_i = 0
     set_values = set(values)
-    print(set_values)
     for value in set_values:
         i = 0
         for item in values:
@@ -485,7 +478,7 @@ def set_deadzone():
         for e in pygame.event.get():
             if e.type == pygame.locals.JOYAXISMOTION:
                 if abs(e.value) > max:
-                    max = e.value
+                    max = abs(e.value)
                 count = count - 1
                 if count < 0:
                     break
@@ -493,8 +486,8 @@ def set_deadzone():
             break
 
     print('Done')
-    if abs(max) > .01:
-        buttons.DEADZONE = abs(max)
+    if max > .01:
+        buttons.DEADZONE = max
 
 
 def setup_drone():
