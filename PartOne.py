@@ -393,12 +393,16 @@ def setup_one_joystick():
     buttons.LEFT_Y = left_y_list[0]
     if left_y_list[1] < 0:
         buttons.LEFT_Y_REVERSE = -1
+    if buttons.LEFT_Y == None:
+        return
 
     print('Push joystick back and forth between center and to the right')
     left_x_list = get_axis()
     buttons.LEFT_X = left_x_list[0]
     if left_x_list[1] < 0:
         buttons.LEFT_X_REVERSE = -1
+    if buttons.LEFT_X == None:
+        return
 
 
 def setup_two_joystick():
@@ -407,24 +411,32 @@ def setup_two_joystick():
     buttons.LEFT_Y = left_y_list[0]
     if left_y_list[1] < 0:
         buttons.LEFT_Y_REVERSE = -1
+    if buttons.LEFT_Y == None:
+        return
 
     print('Push left joystick back and forth between center and to the right')
     left_x_list = get_axis()
     buttons.LEFT_X = left_x_list[0]
     if left_x_list[1] < 0:
         buttons.LEFT_X_REVERSE = -1
+    if buttons.LEFT_X == None:
+        return
 
     print('Push right joystick back and forth between center and up')
     right_y_list = get_axis()
     buttons.RIGHT_Y = right_y_list[0]
     if right_y_list[1] < 0:
         buttons.RIGHT_Y_REVERSE = -1
+    if buttons.RIGHT_Y == None:
+        return
 
     print('Push right joystick back and forth between center to the right')
     right_x_list = get_axis()
     buttons.RIGHT_X = right_x_list[0]
     if right_x_list[1] < 0:
         buttons.RIGHT_X_REVERSE = -1
+    if buttons.RIGHT_X == None:
+        return
 
 
 def get_axis():
