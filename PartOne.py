@@ -271,7 +271,6 @@ class CustomController:
 
 def main():
     pygame.init()
-    drone.set_loglevel(drone.LOG_ERROR)
     get_buttons()
     setup_drone()
     run()
@@ -515,6 +514,7 @@ def setup_drone():
     global drone
 
     drone = tellopy.Tello()
+    drone.set_loglevel(drone.LOG_ERROR)
     drone.connect()
     drone.subscribe(drone.EVENT_FLIGHT_DATA, handler)
     threading.Thread(target=recv_thread, args=[drone]).start()
