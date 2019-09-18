@@ -287,7 +287,7 @@ def get_buttons():
         js.init()
         js_name = js.get_name()
         print('Joystick name: ' + js_name)
-        if js_name in ('wireless Controller', 'Sony Computer Entertainment Wireless Controller'):
+        if js_name in ('Wireless Controller', 'Sony Computer Entertainment Wireless Controller'):
             buttons = JoystickPS4
         elif js_name == 'Sony Interactive Entertainment Wireless Controller':
             buttons = JoystickPS4ALT
@@ -516,9 +516,9 @@ def setup_drone():
     drone = tellopy.Tello()
     drone.set_loglevel(drone.LOG_ERROR)
     drone.connect()
-    print(drone.log_data.__dict__)
     drone.subscribe(drone.EVENT_FLIGHT_DATA, handler)
     threading.Thread(target=recv_thread, args=[drone]).start()
+
 
 def recv_thread(drone):
     global run_recv_thread
@@ -673,14 +673,13 @@ def handler(event, sender, data, **args):
     global drone
 
     drone = sender
-    if event is drone.log_data:
+    if event is drone.EVENT_FLIGHT_DATA:
         # if prev_flight_data != str(data):
         # print(data)
         # ALTERNATIVE SCREEN PRINT
-      #  print(f'Battery %: {data.battery_percentage} Speed: {data.ground_speed} Altitude: {data.height} Fly Time: {data.fly_time}')
-       # print(drone.left_x)
-        #prev_flight_data = str(data)
-        print(drone.log_data.imu.acc_x)
+        print(f'Battery %: {data.battery_percentage} Speed: {data.ground_speed} Altitude: {data.height} Fly Time: {data.fly_time}')
+
+        prev_flight_data = str(data)
         flight_data = data
     else:
         print('event="%s" data=%s' % (event.getname(), str(data)))
