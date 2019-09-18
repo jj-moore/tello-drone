@@ -31,6 +31,8 @@ roll = 0.0
 
 
 class JoystickPS3:
+    QUIT = 10
+
     # d-pad
     UP = 4  # UP
     DOWN = 6  # DOWN
@@ -52,8 +54,8 @@ class JoystickPS3:
     # axis
     LEFT_X = 0
     LEFT_Y = 1
-    RIGHT_X = 2
-    RIGHT_Y = 3
+    RIGHT_X = 3
+    RIGHT_Y = 4
     LEFT_X_REVERSE = 1.0
     LEFT_Y_REVERSE = -1.0
     RIGHT_X_REVERSE = 1.0
@@ -62,6 +64,8 @@ class JoystickPS3:
 
 
 class JoystickPS4:
+    QUIT = 10
+
     # d-pad
     UP = -1  # UP
     DOWN = -1  # DOWN
@@ -83,8 +87,8 @@ class JoystickPS4:
     # axis
     LEFT_X = 0
     LEFT_Y = 1
-    RIGHT_X = 2
-    RIGHT_Y = 3
+    RIGHT_X = 3
+    RIGHT_Y = 4
     LEFT_X_REVERSE = 1.0
     LEFT_Y_REVERSE = -1.0
     RIGHT_X_REVERSE = 1.0
@@ -93,6 +97,8 @@ class JoystickPS4:
 
 
 class JoystickPS4ALT:
+    QUIT = -1
+
     # d-pad
     UP = -1  # UP
     DOWN = -1  # DOWN
@@ -124,6 +130,7 @@ class JoystickPS4ALT:
 
 
 class JoystickF310:
+    QUIT = -1
     # d-pad
     UP = -1  # UP
     DOWN = -1  # DOWN
@@ -155,6 +162,8 @@ class JoystickF310:
 
 
 class JoystickXONE:
+    QUIT = 10
+
     # d-pad
     UP = 0  # UP
     DOWN = 1  # DOWN
@@ -176,8 +185,8 @@ class JoystickXONE:
     # axis
     LEFT_X = 0
     LEFT_Y = 1
-    RIGHT_X = 2
-    RIGHT_Y = 3
+    RIGHT_X = 3
+    RIGHT_Y = 4
     LEFT_X_REVERSE = 1.0
     LEFT_Y_REVERSE = -1.0
     RIGHT_X_REVERSE = 1.0
@@ -237,7 +246,6 @@ class CustomController:
     RIGHT_X_REVERSE = 1.0
     RIGHT_Y_REVERSE = 1.0
 
-
     def __init__(self, control_set):
         number_of_controls = len(control_set)
         self.TAKEOFF = control_set[0]
@@ -263,6 +271,7 @@ class CustomController:
 
 def main():
     pygame.init()
+    drone.set_loglevel(drone.LOG_ERROR)
     get_buttons()
     setup_drone()
     run()
@@ -565,13 +574,30 @@ def handle_input_event(drone, e):
         if e.axis == buttons.LEFT_X:
             yaw = update(yaw, e.value * buttons.LEFT_X_REVERSE)
             drone.set_yaw(yaw)
+
+        # ALTERNATIVE RIGHT JOYSTICK
         if e.axis == buttons.RIGHT_Y:
-            pitch = update(pitch, e.value *
-                           buttons.RIGHT_Y_REVERSE)
-            drone.set_pitch(pitch)
+            e.value *= buttons.RIGHT_Y_REVERSE
+            if e.value > 0:
+                drone.forward(speed * abs(e.value))
+            elif e.value < 0:
+                drone.backward(speed * abs(e.value))
         if e.axis == buttons.RIGHT_X:
-            roll = update(roll, e.value * buttons.RIGHT_X_REVERSE)
-            drone.set_roll(roll)
+            e.value *= buttons.RIGHT_X_REVERSE
+            if e.value < 0:
+                drone.left(speed * abs(e.value))
+            elif e.value > 0:
+                drone.right(speed * abs(e.value))
+
+        # ORIGINAL RIGHT JOYSTICK
+        # if e.axis == buttons.RIGHT_Y:
+        #     pitch = update(pitch, e.value *
+        #                    buttons.RIGHT_Y_REVERSE)
+        #     drone.set_pitch(pitch)
+        # if e.axis == buttons.RIGHT_X:
+        #     roll = update(roll, e.value * buttons.RIGHT_X_REVERSE)
+        #     drone.set_roll(roll)
+
     elif e.type == pygame.locals.JOYHATMOTION:
         if e.value[0] < 0:
             drone.counter_clockwise(speed)
@@ -636,8 +662,11 @@ def handler(event, sender, data, **args):
 
     drone = sender
     if event is drone.EVENT_FLIGHT_DATA:
-        #if prev_flight_data != str(data):
-        print(data)
+        # if prev_flight_data != str(data):
+        # print(data)
+        # ALTERNATIVE SCREEN PRINT
+        print(f'Battery %: {data.battery_percentage} Speed: {data.ground_speed} Altitude: {data.height} Fly Time: {data.fly_time}')
+
         prev_flight_data = str(data)
         flight_data = data
     else:
