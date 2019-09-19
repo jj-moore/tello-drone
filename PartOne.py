@@ -295,7 +295,7 @@ def get_buttons():
             buttons = JoystickPS3
         elif js_name in ('Logitech Gamepad F310'):
             buttons = JoystickF310
-        elif js_name == 'Xbox One Wired Controller':
+        elif js_name in ('Xbox One Wired Controller', 'Microsoft X-Box One pad'):
             buttons = JoystickXONE
         elif js_name == 'Controller (Xbox One For Windows)':
             buttons = JoystickXONE
@@ -576,6 +576,7 @@ def handle_input_event(drone, e):
     global yaw
     global pitch
     global roll
+    global run_recv_thread
     if e.type == pygame.locals.JOYAXISMOTION:
         # ignore small input values (Deadzone)
         if -buttons.DEADZONE <= e.value <= buttons.DEADZONE:
@@ -642,6 +643,12 @@ def handle_input_event(drone, e):
             drone.right(speed)
         elif e.button == buttons.LEFT:
             drone.left(speed)
+        elif e.button == buttons.QUIT:
+            drone.land()
+            run_recv_thread = False
+            cv2.destroyAllWindows()
+            drone.quit()
+            exit(1)
     elif e.type == pygame.locals.JOYBUTTONUP:
         if e.button == buttons.TAKEOFF:
             if throttle != 0.0:
