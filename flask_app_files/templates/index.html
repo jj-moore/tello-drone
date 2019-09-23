@@ -1,0 +1,56 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+    <div class="flex-center">
+        <h1 class="mt-3 mb-5">COSC 480 Drone Flying Competition</h1>
+    </div>
+    <div class="flex-center mb-3">
+        <form id="submission">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Name</span>
+                </div>
+                <input type="text" id="name" class="form-control" name="name" placeholder="Name">
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <label class="input-group-text" for="group">Options</label>
+                </div>
+                <select class="custom-select" id="group" name="group">
+                    <option value="None" selected>Choose...</option>
+                    <option value="Student">Student</option>
+                    <option value="Faculty">Faculty</option>
+                    <option value="Guest">Guest</option>
+                </select>
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Email</span>
+                </div>
+                <input type="email" id="email" class="form-control" name="email" placeholder="Email">
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">College</span>
+                </div>
+                <input type="text" id="college" class="form-control" name="college" placeholder="College">
+            </div>
+
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Major</span>
+                </div>
+                <input type="text" id="major" class="form-control" name="major" placeholder="Major">
+            </div>
+
+        </form>
+    </div>
+<div class="flex-center">
+    <button type="button" id="btn_start" class="btn btn-success w-25 mr-3">Start</button>
+    <button type="button" id="btn_finish" class="btn btn-danger w-25">Finish</button>
+</div>
+</div>
+{% endblock %}
