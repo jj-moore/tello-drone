@@ -287,7 +287,7 @@ def main():
     if num_args > 1:
         current_user.name = sys.argv[1]
     if num_args > 2:
-        current_user.type = sys.argv[2]commc
+        current_user.type = sys.argv[2]
     if num_args > 3:
         current_user.organization = sys.argv[3]
     if num_args > 4:
