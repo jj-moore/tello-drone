@@ -28,17 +28,6 @@ throttle = 0.0
 yaw = 0.0
 pitch = 0.0
 roll = 0.0
-current_user = None
-
-
-class User:
-    name = ''
-    type = ''
-    organization = ''
-    major = ''
-
-    def __str__(self):
-        return f'Name: {self.name} Type: {self.type} Org: {self.organization} Major: {self.major}'
 
 
 class JoystickPS3:
@@ -281,23 +270,11 @@ class CustomController:
 
 
 def main():
-    global current_user
-    num_args = len(sys.argv)
-    current_user = User()
-    if num_args > 1:
-        current_user.name = sys.argv[1]
-    if num_args > 2:
-        current_user.type = sys.argv[2]
-    if num_args > 3:
-        current_user.organization = sys.argv[3]
-    if num_args > 4:
-        current_user.major = sys.argv[4]
-    print(current_user)
-    # pygame.init()
-    # get_buttons()
-    # setup_drone()
-    # run()
-    # stop()
+    pygame.init()
+    get_buttons()
+    setup_drone()
+    run()
+    stop()
 
 
 def get_buttons():
