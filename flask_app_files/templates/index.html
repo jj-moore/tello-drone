@@ -5,7 +5,7 @@
         <h1 class="mt-3 mb-5">COSC 480 Drone Flying Competition</h1>
     </div>
     <div class="flex-center mb-3">
-        <form id="submission">
+        <form id="frm_submission">
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <span class="input-group-text">Name</span>
@@ -15,9 +15,9 @@
 
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
-                    <label class="input-group-text" for="group">Options</label>
+                    <label class="input-group-text" for="type">Options</label>
                 </div>
-                <select class="custom-select" id="group" name="group">
+                <select class="custom-select" id="slt_type" name="type">
                     <option value="None" selected>Choose...</option>
                     <option value="Student">Student</option>
                     <option value="Faculty">Faculty</option>
@@ -27,16 +27,9 @@
 
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
-                    <span class="input-group-text">Email</span>
+                    <span class="input-group-text">Organization</span>
                 </div>
-                <input type="email" id="email" class="form-control" name="email" placeholder="Email">
-            </div>
-
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">College</span>
-                </div>
-                <input type="text" id="college" class="form-control" name="college" placeholder="College">
+                <input type="text" id="organization" class="form-control" name="organization" placeholder="Organization">
             </div>
 
             <div class="input-group mb-3">

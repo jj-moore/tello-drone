@@ -4,16 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function droneStart() {
-    const url = '/start';
-
-    const form = document.getElementById('submission');
+    const my_form = document.getElementById('frm_submission');
+    const formData = new FormData(my_form);
     const data = {};
-    data.name = document.getElementById('name').value;
-    data.group = document.getElementById('group').value;
-    data.email = document.getElementById('email').value;
-    data.college = document.getElementById('college').value;
-    data.major = document.getElementById('major').value;
-
+    for (let pair of formData.entries()) {
+        data[pair[0]] = pair[1];
+    }
+    const url = '/start';
     fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
