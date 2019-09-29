@@ -1,7 +1,11 @@
 from cassandra.cluster import Cluster
+session = None
 
-cluster = Cluster(['172.17.0.2'])
-session = cluster.connect('competition')
+
+def connect_to_db():
+    global session
+    cluster = Cluster(['172.17.0.2'])
+    session = cluster.connect('competition')
 
 
 def insert_record(positional):
