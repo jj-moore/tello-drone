@@ -1,4 +1,5 @@
 import datetime
+
 from cassandra.cluster import Cluster
 from numpy import long
 
@@ -17,8 +18,8 @@ def insert_record(positional):
            f'name, group, org_college, major, valid) ' \
            f'VALUES (' \
            f'{positional.flight_id}, {date_time}, {positional.x}, {positional.y}, {positional.z}, ' \
-           f'{date_time}, {positional.station_id}, {positional.num_crashes}, \'{positional.name}\', ' \
-           f'\'{positional.group}\', \'{positional.org_college}\', \'{positional.major}\', {positional.valid}' \
+           f'{date_time}, {positional.station_id}, {positional.num_crashes}, {positional.name}, ' \
+           f'{positional.group}, {positional.org_college}, {positional.major}, {positional.valid}' \
            f');'
 
 

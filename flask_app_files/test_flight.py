@@ -11,11 +11,9 @@ import pygame.key
 # from subprocess import Popen, PIPE
 import threading
 import time
-import uuid
 
 # custom files
 import classes
-import db_utilities
 
 js_name = None
 buttons = None
@@ -23,10 +21,10 @@ drone = None
 reset = False
 finalize = False
 added = True
-flight_data = None
 prev_flight_data = None
 run_recv_thread = True
 new_image = None
+flight_data = None
 current_image = None
 speed = 100
 throttle = 0.0
@@ -34,47 +32,8 @@ yaw = 0.0
 pitch = 0.0
 roll = 0.0
 
-# data to be stored into the database
-db_row = None
-
 
 def main():
-    global db_row
-    num_args = len(sys.argv)
-    db_row = classes.Positional()
-    if num_args > 1:
-        db_row.name = sys.argv[1]
-    if num_args > 2:
-        db_row.group = sys.argv[2]
-    if num_args > 3:
-        db_row.org_college = sys.argv[3]
-    if num_args > 4:
-        db_row.major = sys.argv[4]
-    print(f'Hello {db_row.name}!')
-    initialize()
-
-
-def web_start(user):
-    global db_row
-    db_row = user
-    print(f'Hello {db_row.name}!')
-    initialize()
-
-
-def web_stop():
-    global db_row
-    global run_recv_thread
-
-    drone.land()
-    run_recv_thread = False
-    cv2.destroyAllWindows()
-    drone.quit()
-    exit(1)
-    db_row = None
-
-
-def initialize():
-    db_row.flight_id = uuid.uuid1()
     pygame.init()
     get_buttons()
     setup_drone()
@@ -319,8 +278,6 @@ def setup_drone():
     global drone
     drone = tellopy.Tello()
     drone.connect()
-    drone.subscribe(drone.EVENT_FLIGHT_DATA, flight_data_handler)
-    drone.subscribe(drone.EVENT_LOG_DATA, log_data_handler)
     threading.Thread(target=recv_thread, args=[drone]).start()
 
 
@@ -476,20 +433,6 @@ def handle_input_event(my_drone, e):
             my_drone.right(0)
         elif e.button == buttons.LEFT:
             my_drone.left(0)
-
-
-def flight_data_handler(event, sender, data, **args):
-    print(
-        f'Battery %: {data.battery_percentage} Speed: {data.ground_speed} '
-        f'Altitude: {data.height} Fly Time: {data.fly_time}')
-
-
-def log_data_handler(event, sender, data, **args):
-    print(f'X:{data.mvo.pos_x} Y:{data.mvo.pos_y} Z:{data.mvo.pos_z} {db_row}')
-    db_row.x = data.mvo.pos_x
-    db_row.y = data.mvo.pos_y
-    db_row.z = data.mvo.pos_z
-    db_utilities.insert_record(db_row)
 
 
 def run():
