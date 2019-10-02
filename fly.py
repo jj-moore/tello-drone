@@ -54,15 +54,33 @@ def main():
     initialize()
 
 
-def web(user):
+def web_start(user):
     global db_row
-    db_row = user
+    db_row = classes.Positional()
+    db_row.name = user.name
+    db_row.group = user.type
+    db_row.org_college = user.organization
+    db_row.major = user.major
     print(f'Hello {db_row.name}!')
     initialize()
 
 
+def web_stop():
+    global db_row
+    global run_recv_thread
+
+    drone.land()
+    run_recv_thread = False
+    cv2.destroyAllWindows()
+    drone.quit()
+    exit(1)
+    db_row = None
+
+
 def initialize():
+    db_utilities.connect_to_db()
     db_row.flight_id = uuid.uuid1()
+    db_row.station_id = uuid.uuid1()
     pygame.init()
     get_buttons()
     setup_drone()
@@ -473,11 +491,11 @@ def flight_data_handler(event, sender, data, **args):
 
 
 def log_data_handler(event, sender, data, **args):
-    print(f'X:{data.mvo.pos_x} Y:{data.mvo.pos_y} Z:{data.mvo.pos_z} {db_row}')
     db_row.x = data.mvo.pos_x
     db_row.y = data.mvo.pos_y
     db_row.z = data.mvo.pos_z
-    db_utilities.insert_record(db_row)
+    statement = db_utilities.insert_record(db_row)
+    db_utilities.execute_cql(statement)
 
 
 def run():
