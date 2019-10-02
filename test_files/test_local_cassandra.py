@@ -26,24 +26,11 @@ class LogEvent:
 
 def main():
     global db_row
-    num_args = len(sys.argv)
     db_row = classes.Positional()
-    if num_args > 1:
-        db_row.name = sys.argv[1]
-    if num_args > 2:
-        db_row.group = sys.argv[2]
-    if num_args > 3:
-        db_row.org_college = sys.argv[3]
-    if num_args > 4:
-        db_row.major = sys.argv[4]
-    print(f'Hello {db_row.name}!')
-    initialize()
-
-
-def web(user):
-    global db_row
-    db_row = user
-    print(f'Hello {db_row.name}!')
+    db_row.name = 'Test User'
+    db_row.group = 'Test Group'
+    db_row.org_college = 'Test Organization'
+    db_row.major = 'Test Major'
     initialize()
 
 
