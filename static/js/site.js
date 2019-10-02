@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function droneStart() {
+    const name = document.getElementById('name').value;
+    if (!name) {
+        alert("Please enter a name.");
+    }
+
     const my_form = document.getElementById('frm_submission');
     const formData = new FormData(my_form);
     const data = {};
