@@ -1,5 +1,4 @@
 import datetime
-
 from cassandra.cluster import Cluster
 from numpy import long
 
@@ -9,8 +8,12 @@ session = None
 def connect_to_db():
     global session
     cluster = Cluster(['172.17.0.2'])
-    session = cluster.connect('competition')
-    print('connected')
+    try:
+        session = cluster.connect('competition')
+        print('Connected to Cassandra cluster.')
+    except:
+        print('Cannot connect to Cassandra cluster. Exiting ...')
+        exit(1)
 
 
 def insert_record(positional):

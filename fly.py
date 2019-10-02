@@ -50,7 +50,6 @@ def main():
         db_row.org_college = sys.argv[3]
     if num_args > 4:
         db_row.major = sys.argv[4]
-    print(f'Hello {db_row.name}!')
     initialize()
 
 
@@ -61,7 +60,6 @@ def web_start(user):
     db_row.group = user.type
     db_row.org_college = user.organization
     db_row.major = user.major
-    print(f'Hello {db_row.name}!')
     initialize()
 
 
@@ -78,6 +76,7 @@ def web_stop():
 
 
 def initialize():
+    print(f'Hello {db_row.name}!')
     db_utilities.connect_to_db()
     db_row.flight_id = uuid.uuid1()
     db_row.station_id = uuid.uuid1()
