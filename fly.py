@@ -42,6 +42,9 @@ def main():
     global db_row
     num_args = len(sys.argv)
     db_row = classes.Positional()
+    if num_args <= 1:
+        print('Please enter a name as the first argument.')
+        exit(1)
     if num_args > 1:
         db_row.name = sys.argv[1]
     if num_args > 2:
