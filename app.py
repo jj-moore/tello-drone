@@ -21,7 +21,15 @@ def web_start():
     current_user.major = request.json.get('major')
     fly.web_start(current_user)
     return jsonify(
-        message='drone started'
+        message='flight started'
+    )
+
+
+@app.route('/cancel', methods=['GET'])
+def web_cancel():
+    fly.web_cancel()
+    return jsonify(
+        message='flight cancelled'
     )
 
 
@@ -29,5 +37,5 @@ def web_start():
 def web_stop():
     fly.web_stop()
     return jsonify(
-        message='drone stopped'
+        message='flight stopped'
     )

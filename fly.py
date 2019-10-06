@@ -66,15 +66,20 @@ def web_start(user):
     initialize()
 
 
+def web_cancel():
+    global db_row
+    drone.land()
+    db_row = None
+
+
 def web_stop():
     global db_row
-    global run_recv_thread
+    drone.land()
+    statement = db_utilities.flight_success(db_row.flight_id)
+    db_utilities.execute_cql(statement)
+    db_row = None
 
     drone.land()
-    run_recv_thread = False
-    cv2.destroyAllWindows()
-    drone.quit()
-    exit(1)
     db_row = None
 
 
@@ -333,9 +338,7 @@ def setup_drone():
 
 
 def recv_thread(my_drone):
-    global run_recv_thread
     global new_image
-    global flight_data
     global current_image
 
     try:

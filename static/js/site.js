@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn_start').addEventListener('click', droneStart);
+    document.getElementById('btn_cancel').addEventListener('click', droneCancel);
     document.getElementById('btn_finish').addEventListener('click', droneFinish);
 });
 
@@ -22,6 +23,20 @@ function droneStart() {
         body: JSON.stringify(data)
     })
     .then(response => {
+        return response.json();
+    })
+    .then(json => {
+        console.log(json);
+    })
+    .catch(error => {
+        console.log(error.message);
+    });
+}
+
+function droneCancel() {
+    const url = '/cancel';
+    fetch(url)
+       .then(response => {
         return response.json();
     })
     .then(json => {

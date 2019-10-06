@@ -27,7 +27,7 @@ class LogEvent:
 def main():
     global db_row
     db_row = classes.Positional()
-    db_row.name = 'Test User'
+    db_row.name = 'Test User1'
     db_row.group = 'Test Group'
     db_row.org_college = 'Test Organization'
     db_row.major = 'Test Major'
@@ -43,6 +43,10 @@ def initialize():
             time.sleep(1.0)
             log_generator()
     except KeyboardInterrupt:
+        success = input("Was flight successful (y/n)? ")
+        if success.upper() == "Y":
+            statement = db_utilities.flight_success(db_row.flight_id)
+            db_utilities.execute_cql(statement)
         print('Goodbye!')
         quit(0)
     except Exception as e:

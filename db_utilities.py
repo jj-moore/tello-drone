@@ -1,5 +1,6 @@
 import datetime
 from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
 from numpy import long
 
 session = None
@@ -8,6 +9,8 @@ session = None
 def connect_to_db():
     global session
     cluster = Cluster(['172.17.0.2'])
+    # auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
+    # cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
     try:
         session = cluster.connect('competition')
         print('Connected to Cassandra cluster.')
@@ -18,7 +21,6 @@ def connect_to_db():
 
 def insert_record(positional):
     date_time = unix_time_millis()
-    print(f'db_update {date_time}')
     return f'INSERT INTO positional (flight_id, ts, x, y, z, latest_ts, station_id, num_crashes, ' \
            f'name, group, org_college, major, valid) ' \
            f'VALUES (' \
@@ -26,6 +28,10 @@ def insert_record(positional):
            f'{date_time}, {positional.station_id}, {positional.num_crashes}, \'{positional.name}\', ' \
            f'\'{positional.group}\', \'{positional.org_college}\', \'{positional.major}\', {positional.valid}' \
            f');'
+
+
+def flight_success(flight_id):
+    return f'UPDATE positional SET valid = true WHERE flight_id = {flight_id}'
 
 
 def execute_cql(statement):
