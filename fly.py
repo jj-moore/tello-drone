@@ -44,7 +44,9 @@ def main():
     num_args = len(sys.argv)
     db_row = classes.Positional()
     if num_args <= 1:
-        print('Please enter a name as the first argument.')
+        print('\n**You must enter at least one command line argument (your name).')
+        print('**Optional arguments (in order): group, organization, major')
+        print('**Arguments with spaces must be enclosed in double or single quotes')
         exit(1)
     if num_args > 1:
         db_row.name = sys.argv[1]
@@ -54,6 +56,7 @@ def main():
         db_row.org_college = sys.argv[3]
     if num_args > 4:
         db_row.major = sys.argv[4]
+    print(db_row)
     initialize()
 
 
