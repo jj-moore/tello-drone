@@ -319,6 +319,10 @@ def run():
                 handle_input_event(drone, e)
     except KeyboardInterrupt as e:
         print(e)
+        success = input("Was flight successful (y/n)? ")
+        if success.upper() == "Y":
+            statement = db_utilities.flight_success(db_row.flight_id)
+            db_utilities.execute_cql(statement)
         stop()
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
