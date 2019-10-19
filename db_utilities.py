@@ -1,16 +1,34 @@
 import datetime
-from cassandra.cluster import Cluster
-from cassandra.auth import PlainTextAuthProvider
+from dse.cluster import Cluster
+from dse.auth import PlainTextAuthProvider
 from numpy import long
 
-session = None
+session = None  # database session
+
+
+# object that will be stored in database
+class Positional:
+    flight_id = ''
+    x = ''
+    y = ''
+    z = ''
+    station_id = ''
+    num_crashes = 0
+    name = ''
+    group = ''
+    org_college = ''
+    major = ''
+    valid = False
+
+    def __str__(self):
+        return f'Name: {self.name} Type: {self.group} Org: {self.org_college} Major: {self.major}'
 
 
 def connect_to_db():
     global session
-    cluster = Cluster(['172.17.0.2'])
-    # auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
-    # cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
+    # cluster = Cluster(['172.17.0.2'])
+    auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
+    cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
     try:
         session = cluster.connect('competition')
         print('Connected to Cassandra cluster.')

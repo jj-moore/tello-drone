@@ -1,4 +1,3 @@
-import classes
 import pygame
 import pygame.locals
 import time
@@ -44,7 +43,7 @@ def new_controller(js):
         if finalize:
             break
 
-    buttons = classes.CustomController(control_set)
+    buttons = CustomController(control_set)
     set_deadzone()
 
     number_of_joystick = js.get_numaxes()
@@ -214,3 +213,47 @@ def get_axis():
 
     answer = [axis, my_sum]
     return answer
+
+
+class CustomController:
+    TAKEOFF = None
+    LAND = None
+    UP = None
+    DOWN = None
+    ROTATE_RIGHT = None
+    ROTATE_LEFT = None
+    FORWARD = None
+    BACKWARD = None
+    RIGHT = None
+    LEFT = None
+    DEADZONE = 0.1
+    LEFT_X = None
+    LEFT_Y = None
+    RIGHT_X = None
+    RIGHT_Y = None
+    LEFT_X_REVERSE = 1.0
+    LEFT_Y_REVERSE = 1.0
+    RIGHT_X_REVERSE = 1.0
+    RIGHT_Y_REVERSE = 1.0
+
+    def __init__(self, control_set):
+        number_of_controls = len(control_set)
+        self.TAKEOFF = control_set[0]
+        self.LAND = control_set[1]
+
+        if number_of_controls > 2:
+            self.UP = control_set[2]
+        if number_of_controls > 3:
+            self.DOWN = control_set[3]
+        if number_of_controls > 4:
+            self.ROTATE_RIGHT = control_set[4]
+        if number_of_controls > 5:
+            self.ROTATE_LEFT = control_set[5]
+        if number_of_controls > 6:
+            self.FORWARD = control_set[6]
+        if number_of_controls > 7:
+            self.BACKWARD = control_set[7]
+        if number_of_controls > 8:
+            self.RIGHT = control_set[8]
+        if number_of_controls > 9:
+            self.LEFT = control_set[9]

@@ -1,33 +1,8 @@
-class WebUser:
-    name = ''
-    type = ''
-    organization = ''
-    major = ''
-
-    def __str__(self):
-        return f'Name: {self.name} Type: {self.type} Org: {self.organization} Major: {self.major}'
-
-
-class Positional:
-    flight_id = ''
-    x = ''
-    y = ''
-    z = ''
-    station_id = ''
-    num_crashes = 0
-    name = ''
-    group = ''
-    org_college = ''
-    major = ''
-    valid = False
-
-    def __str__(self):
-        return f'Name: {self.name} Type: {self.group} Org: {self.org_college} Major: {self.major}'
-
-
 # default values for all joysticks
 # this prevents runtime errors if a property is accessed that
 # the joystick does not have.
+
+
 class Joystick:
     # buttons
     DEADZONE = 0.08
@@ -232,47 +207,3 @@ class JoystickTARANIS(Joystick):
     RIGHT_X_REVERSE = 1.0
     RIGHT_Y_REVERSE = 1.0
     DEADZONE = 0.01
-
-
-class CustomController(Joystick):
-    TAKEOFF = None
-    LAND = None
-    UP = None
-    DOWN = None
-    ROTATE_RIGHT = None
-    ROTATE_LEFT = None
-    FORWARD = None
-    BACKWARD = None
-    RIGHT = None
-    LEFT = None
-    DEADZONE = 0.1
-    LEFT_X = None
-    LEFT_Y = None
-    RIGHT_X = None
-    RIGHT_Y = None
-    LEFT_X_REVERSE = 1.0
-    LEFT_Y_REVERSE = 1.0
-    RIGHT_X_REVERSE = 1.0
-    RIGHT_Y_REVERSE = 1.0
-
-    def __init__(self, control_set):
-        number_of_controls = len(control_set)
-        self.TAKEOFF = control_set[0]
-        self.LAND = control_set[1]
-
-        if number_of_controls > 2:
-            self.UP = control_set[2]
-        if number_of_controls > 3:
-            self.DOWN = control_set[3]
-        if number_of_controls > 4:
-            self.ROTATE_RIGHT = control_set[4]
-        if number_of_controls > 5:
-            self.ROTATE_LEFT = control_set[5]
-        if number_of_controls > 6:
-            self.FORWARD = control_set[6]
-        if number_of_controls > 7:
-            self.BACKWARD = control_set[7]
-        if number_of_controls > 8:
-            self.RIGHT = control_set[8]
-        if number_of_controls > 9:
-            self.LEFT = control_set[9]

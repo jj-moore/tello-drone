@@ -1,10 +1,19 @@
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 import fly
-from classes import WebUser
 
 app = Flask(__name__)
 CORS(app)
+
+
+class WebUser:
+    name = ''
+    type = ''
+    organization = ''
+    major = ''
+
+    def __str__(self):
+        return f'Name: {self.name} Type: {self.type} Org: {self.organization} Major: {self.major}'
 
 
 @app.route('/')
