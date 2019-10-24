@@ -143,6 +143,7 @@ def initialize_drone():
     print(f'Wifi: {drone.wifi_strength}')
     drone.subscribe(drone.EVENT_FLIGHT_DATA, flight_data_handler)
     drone.subscribe(drone.EVENT_LOG_DATA, log_data_handler)
+    drone.set_loglevel(drone.LOG_WARN)
     threading.Thread(target=video_thread).start()
 
 
