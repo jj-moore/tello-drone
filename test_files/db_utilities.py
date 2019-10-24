@@ -1,6 +1,6 @@
 import datetime
-from cassandra.cluster import Cluster
-from cassandra.auth import PlainTextAuthProvider
+from dse.cluster import Cluster
+from dse.auth import PlainTextAuthProvider
 from numpy import long
 
 session = None
