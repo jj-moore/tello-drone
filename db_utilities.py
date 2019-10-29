@@ -28,7 +28,8 @@ def connect_to_db():
     global session
     # cluster = Cluster(['172.17.0.2'])
     auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
-    cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
+    cluster = Cluster(auth_provider=auth_provider, contact_points=get_ips())
+    # cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
     try:
         session = cluster.connect('competition')
         print('Connected to Cassandra cluster.')
@@ -36,9 +37,11 @@ def connect_to_db():
         print('Cannot connect to Cassandra cluster. Exiting ...')
         exit(1)
 
+
 def get_ips():
     file = open("ips.txt", "r")
     return file.read().split(",")
+
 
 def insert_record(positional):
     date_time = unix_time_millis()

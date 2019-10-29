@@ -55,7 +55,7 @@ def main():
 def initialize():
     db_utilities.connect_to_db()
     db_row.flight_id = uuid.uuid1()
-    db_row.station_id = uuid.uuid1()
+    db_row.station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
     try:
         while 1:
             time.sleep(1.0)

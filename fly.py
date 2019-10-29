@@ -92,7 +92,6 @@ def initialize():
     print(f'Hello {db_row.name}!')
     db_row.flight_id = uuid.uuid1()
     db_row.station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
-    # db_row.station_id = uuid.uuid1()
     db_utilities.connect_to_db()
     initialize_joystick()
     initialize_drone()
