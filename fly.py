@@ -28,7 +28,7 @@ roll = 0.0
 # video settings
 new_image = None
 current_image = None
-show_video = False;
+show_video = False
 
 flight_data = None  # log data
 drone = None  # Tellopy object

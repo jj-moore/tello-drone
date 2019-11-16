@@ -27,9 +27,9 @@ class Positional:
 def connect_to_db():
     global session
     # cluster = Cluster(['172.17.0.2'])
+    # cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
     auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
     cluster = Cluster(auth_provider=auth_provider, contact_points=get_ips())
-    # cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
     try:
         session = cluster.connect('competition')
         print('Connected to Cassandra cluster.')
@@ -63,7 +63,7 @@ def execute_cql(statement):
 
 
 def unix_time_millis():
-    dt = datetime.datetime.now()
+    dt = datetime.datetime.utcnow()
     epoch = datetime.datetime.utcfromtimestamp(0)
     delta = dt - epoch
     seconds = delta.total_seconds()
