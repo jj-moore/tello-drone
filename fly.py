@@ -33,6 +33,7 @@ show_video = False
 flight_data = None  # log data
 drone = None  # Tellopy object
 db_row = None  # data to be stored into the database
+prev_flight_id = None
 
 
 #  Command line entry point
@@ -43,10 +44,17 @@ def main():
     if num_args <= 1:
         print('\n**You must enter at least one command line argument (your name).')
         print('**Optional arguments (in order): group, organization, major')
+        print('**Add an "r" as the last argument to resume the previous flight')
         print('**Arguments with spaces must be enclosed in double or single quotes')
         exit(1)
     if num_args > 1:
         db_row.name = sys.argv[1]
+
+    is_resume = False
+    if sys.argv[num_args-1].lower() == 'r':
+        is_resume = True
+        num_args -= 1
+
     if num_args > 2:
         db_row.group = sys.argv[2]
     if num_args > 3:
@@ -54,7 +62,7 @@ def main():
     if num_args > 4:
         db_row.major = sys.argv[4]
     print(db_row)
-    initialize()
+    initialize(is_resume)
 
 
 # Web application entry point
@@ -88,9 +96,16 @@ def web_stop():
     db_row = None
 
 
-def initialize():
-    print(f'Hello {db_row.name}!')
-    db_row.flight_id = uuid.uuid1()
+def initialize(is_resume=False):
+    global prev_flight_id
+    if is_resume:
+        print(f'Continuing flight {prev_flight_id}')
+        db_row.flight_id = prev_flight_id
+    else:
+        print(f'Hello {db_row.name}!')
+        db_row.flight_id = uuid.uuid1()
+        prev_flight_id = db_row.flight_id
+
     db_row.station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
     db_utilities.connect_to_db()
     initialize_joystick()
