@@ -4,6 +4,7 @@ from dse.auth import PlainTextAuthProvider
 from numpy import long
 
 session = None  # database session
+get_flight_prepared = None
 
 
 # object that will be stored in database
@@ -26,6 +27,7 @@ class Positional:
 
 def connect_to_db():
     global session
+    global get_flight_prepared
     cluster = Cluster(['172.17.0.2'])
     # cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
     # auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
@@ -33,6 +35,7 @@ def connect_to_db():
     try:
         session = cluster.connect('competition')
         print('Connected to Cassandra cluster.')
+        get_flight_prepared = session.prepare(f'SELECT flight_id, station_id, name, group, org_college, major, ts, latest_ts FROM positional WHERE flight_id = ? ORDER BY ts LIMIT 1;')
     except:
         print('Cannot connect to Cassandra cluster. Exiting ...')
         exit(1)
@@ -65,6 +68,12 @@ def execute_cql(statement):
 def execute_cql_return(statement):
     rows = session.execute(statement)
     return rows
+
+
+def get_flight(flight_id):
+    bound_statement = get_flight_prepared.bind([flight_id])
+    flight = session.execute(bound_statement).one()
+    return flight
 
 
 def unix_time_millis():
