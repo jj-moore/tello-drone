@@ -8,8 +8,8 @@ session = None
 
 def connect_to_db():
     global session
-    cluster = Cluster(['172.17.0.2'])
-    auth_provider = PlainTextAuthProvider(username='cassandra', password='cassandra')
+    #cluster = Cluster(['172.17.0.2'])
+    auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
     cluster = Cluster(auth_provider=auth_provider, contact_points=get_ips())
     try:
         session = cluster.connect('competition')

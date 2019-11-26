@@ -33,7 +33,7 @@ show_video = False
 flight_data = None  # log data
 drone = None  # Tellopy object
 db_row = None  # data to be stored into the database
-prev_flight_id = None
+prev_flight_id = None # 'f994e150-0cbf-11ea-a39c-f0761c8d5438'
 
 
 #  Command line entry point
@@ -51,9 +51,9 @@ def main():
         db_row.name = sys.argv[1]
 
     is_resume = False
-    if sys.argv[num_args-1].lower() == 'r':
+    if sys.argv[num_args - 1].lower() == 'r':
         is_resume = True
-        num_args -= 1
+        # num_args -= 1
 
     if num_args > 2:
         db_row.group = sys.argv[2]
@@ -99,7 +99,10 @@ def web_stop():
 def initialize(is_resume=False):
     global prev_flight_id
     if is_resume:
+        db_utilities.connect_to_db()
         print(f'Continuing flight {prev_flight_id}')
+        result = db_utilities.execute_cql_return('SELECT flight_id FROM Positional LIMIT 1').one()
+        prev_flight_id = result[0]
         db_row.flight_id = prev_flight_id
     else:
         print(f'Hello {db_row.name}!')

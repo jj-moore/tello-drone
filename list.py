@@ -3,15 +3,15 @@ import db_utilities
 
 def main():
     db_utilities.connect_to_db()
-    statement = 'SELECT DISTINCT flight_id FROM positional;'
-    flights = db_utilities.execute_cql_return(statement)
-    flight_id_array = []
-    for flight in flights:
-        flight_id_array.append(flight[0])
-    flight_id_array.reverse()
+    flight_list = db_utilities.get_ordered_flights()
+    total_flights = flight_list.__len__()
+    if total_flights >= 10:
+        count = 10
+    else:
+        count = total_flights
 
-    for flight_id in flight_id_array:
-        result = db_utilities.get_flight(flight_id)
+    for i in range(total_flights - count, total_flights, 1):
+        result = db_utilities.get_flight(flight_list[i])
         flight_time = int((result[7] - result[6]).total_seconds())
         flight_minutes = int(flight_time / 60)
         flight_seconds = flight_time % 60

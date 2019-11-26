@@ -47,6 +47,9 @@ def get_ips():
 
 
 def insert_record(positional):
+    print('************************')
+    print(positional)
+    print('************************')
     date_time = unix_time_millis()
     return f'INSERT INTO positional (flight_id, ts, x, y, z, latest_ts, station_id, num_crashes, ' \
            f'name, group, org_college, major, valid) ' \
@@ -76,9 +79,21 @@ def get_flight(flight_id):
     return flight
 
 
+def get_ordered_flights():
+    statement = 'SELECT DISTINCT flight_id, latest_ts FROM positional;'
+    rows = execute_cql_return(statement)
+    key_value = {}
+    for row in rows:
+        key_value.update({row[0]: row[1]})
+
+    keys = sorted(key_value, key=key_value.__getitem__)
+    return keys
+
+
 def unix_time_millis():
     dt = datetime.datetime.utcnow()
     epoch = datetime.datetime.utcfromtimestamp(0)
     delta = dt - epoch
     seconds = delta.total_seconds()
     return long(seconds * 1000)
+

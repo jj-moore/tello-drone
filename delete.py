@@ -23,8 +23,10 @@ def main():
 
 
 def last_flight():
-    statement = 'SELECT flight_id, name, org_college FROM positional LIMIT 1;'
     try:
+        rows = db_utilities.get_ordered_flights()
+        last_flight_id = rows[rows.__len__() - 1]
+        statement = f'SELECT flight_id, name, org_college FROM positional WHERE flight_id = {last_flight_id} LIMIT 1;'
         row = db_utilities.execute_cql_return(statement).one()
         return row
     except:
