@@ -119,6 +119,15 @@ def delete_flight(flight_id):
         print(f'An error occurred while attempting to delete flight {flight_id}')
 
 
+def update_flight_in_progress(flight_id):
+    statement = f'UPDATE positional USING TTL 25 SET valid = false WHERE flight_id = {flight_id}'
+    connect_to_db()
+    try:
+        session.execute(statement)
+    except:
+        pass
+
+
 def unix_time_millis():
     dt = datetime.datetime.utcnow()
     epoch = datetime.datetime.utcfromtimestamp(0)

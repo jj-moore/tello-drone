@@ -106,6 +106,7 @@ def initialize(is_resume=False):
     db_row.station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
     initialize_joystick()
     initialize_drone()
+    threading.Thread(target=validate_flight, args=db_row.flight_id).start()
     run()
 
 
@@ -155,6 +156,12 @@ def initialize_drone():
     drone.subscribe(drone.EVENT_LOG_DATA, log_data_handler)
     drone.set_loglevel(drone.LOG_WARN)
     threading.Thread(target=video_thread).start()
+
+
+def validate_flight(flight_id):
+    while True:
+        db_utilities.update_flight_in_progress(flight_id)
+        time.sleep(20.0)
 
 
 def run():
