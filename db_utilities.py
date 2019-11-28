@@ -1,4 +1,6 @@
 import datetime
+import uuid
+
 from dse.cluster import Cluster
 from dse.auth import PlainTextAuthProvider
 from numpy import long
@@ -29,18 +31,19 @@ def connect_to_db():
     global session
     global get_flight_prepared
 
-    contact_points = get_ips("ips_jeremy_local.txt")
-    auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
-    cluster = Cluster(auth_provider=auth_provider, contact_points=contact_points)
-    try:
-        session = cluster.connect('competition')
-        print('Connected to Cassandra cluster.')
-        get_flight_prepared = session.prepare(
-            f'SELECT flight_id, station_id, name, group, org_college, major, ts, latest_ts '
-            f'FROM positional WHERE flight_id = ? ORDER BY ts LIMIT 1;')
-    except:
-        print('Cannot connect to Cassandra cluster. Exiting ...')
-        exit(1)
+    if session is None:
+        contact_points = get_ips("ips_jeremy_local.txt")
+        auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
+        cluster = Cluster(auth_provider=auth_provider, contact_points=contact_points)
+        try:
+            session = cluster.connect('competition')
+            print('Connected to Cassandra cluster.')
+            get_flight_prepared = session.prepare(
+                f'SELECT flight_id, station_id, name, group, org_college, major, ts, latest_ts, valid '
+                f'FROM positional WHERE flight_id = ? ORDER BY ts LIMIT 1;')
+        except:
+            print('Cannot connect to Cassandra cluster. Exiting ...')
+            exit(1)
 
 
 def get_ips(filename):
@@ -49,6 +52,7 @@ def get_ips(filename):
 
 
 def insert_record(positional):
+    connect_to_db()
     date_time = unix_time_millis()
     statement = f'INSERT INTO positional (flight_id, ts, x, y, z, latest_ts, station_id, num_crashes, ' \
                 f'name, group, org_college, major, valid) ' \
@@ -60,18 +64,29 @@ def insert_record(positional):
     session.execute(statement)
 
 
-def flight_success(flight_id):
+def validate_flight(flight_id):
+    connect_to_db()
     statement = f'UPDATE positional SET valid = true WHERE flight_id = {flight_id}'
     session.execute(statement)
 
 
 def get_flight(flight_id):
-    bound_statement = get_flight_prepared.bind([flight_id])
-    flight = session.execute(bound_statement).one()
-    return flight
+    connect_to_db()
+    try:
+        if isinstance(flight_id, str):
+            flight_uuid = uuid.UUID(flight_id)
+        else:
+            flight_uuid = flight_id
+        bound_statement = get_flight_prepared.bind([flight_uuid])
+        flight = session.execute(bound_statement).one()
+        return flight
+    except:
+        print(f'Flight {flight_id} was not found')
+        exit(1)
 
 
 def get_ordered_flights():
+    connect_to_db()
     statement = 'SELECT DISTINCT flight_id, latest_ts FROM positional;'
     rows = session.execute(statement)
     key_value = {}
@@ -82,6 +97,7 @@ def get_ordered_flights():
 
 
 def most_recent_flight():
+    connect_to_db()
     try:
         rows = get_ordered_flights()
         last_flight_id = rows[rows.__len__() - 1]
@@ -94,6 +110,7 @@ def most_recent_flight():
 
 
 def delete_flight(flight_id):
+    connect_to_db()
     statement = f'DELETE FROM positional WHERE flight_id = {flight_id}'
     try:
         session.execute(statement)

@@ -3,7 +3,6 @@ import db_utilities
 
 
 def main():
-    db_utilities.connect_to_db()
     num_args = len(sys.argv)
     if num_args > 1:
         flight_to_delete = db_utilities.get_flight(sys.argv[1])

@@ -4,7 +4,6 @@ import time
 import uuid
 
 # custom files
-import classes
 import db_utilities
 
 # data to be stored into the database
@@ -27,7 +26,7 @@ class LogEvent:
 def main():
     global db_row
     num_args = len(sys.argv)
-    db_row = classes.Positional()
+    db_row = db_utilities.Positional()
     if num_args <= -1:
         print('\n**You must enter at least one command line argument (your name).')
         print('**Optional arguments (in order): group, organization, major')
@@ -41,7 +40,6 @@ def main():
 
 
 def initialize():
-    db_utilities.connect_to_db()
     db_row.flight_id = uuid.uuid1()
     db_row.station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
     try:
@@ -51,8 +49,7 @@ def initialize():
     except KeyboardInterrupt:
         success = input("Was flight successful (y/n)? ")
         if success.upper() == "Y":
-            statement = db_utilities.flight_success(db_row.flight_id)
-            db_utilities.execute_cql(statement)
+            db_utilities.validate_flight(db_row.flight_id)
         print('Goodbye!')
         quit(0)
     except Exception as e:
@@ -65,9 +62,7 @@ def log_data_handler(data):
     db_row.x = data.mvo.pos_x
     db_row.y = data.mvo.pos_y
     db_row.z = data.mvo.pos_z
-    statement = db_utilities.insert_record(db_row)
-    print(statement)
-    db_utilities.execute_cql(statement)
+    db_utilities.insert_record(db_row)
 
 
 def log_generator():

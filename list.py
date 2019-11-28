@@ -2,7 +2,6 @@ import db_utilities
 
 
 def main():
-    db_utilities.connect_to_db()
     flight_list = db_utilities.get_ordered_flights()
     total_flights = flight_list.__len__()
     if total_flights >= 10:
@@ -20,6 +19,7 @@ def main():
         print(f'\t\t\t\t\t\t\tOrg:\t\t{result[4]}')
         print(f'\t\t\t\t\t\t\tMajor:\t\t{result[5]}')
         print(f'\t\t\t\t\t\t\tFlight Time:\t{flight_minutes}m {flight_seconds}s')
+        print(f'\t\t\t\t\t\t\tSuccessful:\t{result[8]}')
         print('')
 
 
