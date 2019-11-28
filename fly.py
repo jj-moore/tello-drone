@@ -91,8 +91,7 @@ def web_stop():
     global show_video
     drone.land()
     show_video = False
-    statement = db_utilities.flight_success(db_row.flight_id)
-    db_utilities.execute_cql(statement)
+    db_utilities.flight_success(db_row.flight_id)
     db_row = None
 
 
@@ -194,8 +193,7 @@ def stop():
     show_video = False
     success = input("Was flight successful (y/n)? ")
     if success.upper() == "Y":
-        statement = db_utilities.flight_success(db_row.flight_id)
-        db_utilities.execute_cql(statement)
+        db_utilities.flight_success(db_row.flight_id)
     cv2.destroyAllWindows()
     drone.quit()
     exit(1)
@@ -264,8 +262,7 @@ def log_data_handler(event, sender, data, **args):
             db_row.x = cur_x
             db_row.y = cur_y
             db_row.z = cur_z
-            statement = db_utilities.insert_record(db_row)
-            db_utilities.execute_cql(statement)
+            db_utilities.insert_record(db_row)
             if flight_data:
                 print(f'User: {db_row.name} X: {db_row.x} Y: {db_row.y} Z: {db_row.z} Battery: '
                       f'{flight_data.battery_percentage} Wifi Strength: {flight_data.wifi_strength}')

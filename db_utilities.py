@@ -3,7 +3,7 @@ from dse.cluster import Cluster
 from dse.auth import PlainTextAuthProvider
 from numpy import long
 
-session = None  # database session
+session = None
 get_flight_prepared = None
 
 
@@ -28,49 +28,41 @@ class Positional:
 def connect_to_db():
     global session
     global get_flight_prepared
-    cluster = Cluster(['172.17.0.2'])
-    # cluster = Cluster(auth_provider=auth_provider, contact_points=['3.230.244.15', '3.228.63.63', '3.231.140.68'])
-    # auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
-    # cluster = Cluster(auth_provider=auth_provider, contact_points=get_ips())
+
+    contact_points = get_ips("ips_jeremy_local.txt")
+    auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
+    cluster = Cluster(auth_provider=auth_provider, contact_points=contact_points)
     try:
         session = cluster.connect('competition')
         print('Connected to Cassandra cluster.')
-        get_flight_prepared = session.prepare(f'SELECT flight_id, station_id, name, group, org_college, major, ts, latest_ts FROM positional WHERE flight_id = ? ORDER BY ts LIMIT 1;')
+        get_flight_prepared = session.prepare(
+            f'SELECT flight_id, station_id, name, group, org_college, major, ts, latest_ts '
+            f'FROM positional WHERE flight_id = ? ORDER BY ts LIMIT 1;')
     except:
         print('Cannot connect to Cassandra cluster. Exiting ...')
         exit(1)
 
 
-def get_ips():
-    file = open("ips.txt", "r")
+def get_ips(filename):
+    file = open(filename, "r")
     return file.read().split(",")
 
 
 def insert_record(positional):
-    print('************************')
-    print(positional)
-    print('************************')
     date_time = unix_time_millis()
-    return f'INSERT INTO positional (flight_id, ts, x, y, z, latest_ts, station_id, num_crashes, ' \
-           f'name, group, org_college, major, valid) ' \
-           f'VALUES (' \
-           f'{positional.flight_id}, {date_time}, {positional.x}, {positional.y}, {positional.z}, ' \
-           f'{date_time}, {positional.station_id}, {positional.num_crashes}, \'{positional.name}\', ' \
-           f'\'{positional.group}\', \'{positional.org_college}\', \'{positional.major}\', {positional.valid}' \
-           f');'
-
-
-def flight_success(flight_id):
-    return f'UPDATE positional SET valid = true WHERE flight_id = {flight_id}'
-
-
-def execute_cql(statement):
+    statement = f'INSERT INTO positional (flight_id, ts, x, y, z, latest_ts, station_id, num_crashes, ' \
+                f'name, group, org_college, major, valid) ' \
+                f'VALUES (' \
+                f'{positional.flight_id}, {date_time}, {positional.x}, {positional.y}, {positional.z}, ' \
+                f'{date_time}, {positional.station_id}, {positional.num_crashes}, \'{positional.name}\', ' \
+                f'\'{positional.group}\', \'{positional.org_college}\', \'{positional.major}\', {positional.valid}' \
+                f');'
     session.execute(statement)
 
 
-def execute_cql_return(statement):
-    rows = session.execute(statement)
-    return rows
+def flight_success(flight_id):
+    statement = f'UPDATE positional SET valid = true WHERE flight_id = {flight_id}'
+    session.execute(statement)
 
 
 def get_flight(flight_id):
@@ -81,13 +73,33 @@ def get_flight(flight_id):
 
 def get_ordered_flights():
     statement = 'SELECT DISTINCT flight_id, latest_ts FROM positional;'
-    rows = execute_cql_return(statement)
+    rows = session.execute(statement)
     key_value = {}
     for row in rows:
         key_value.update({row[0]: row[1]})
-
     keys = sorted(key_value, key=key_value.__getitem__)
     return keys
+
+
+def most_recent_flight():
+    try:
+        rows = get_ordered_flights()
+        last_flight_id = rows[rows.__len__() - 1]
+        statement = f'SELECT flight_id, name, org_college FROM positional WHERE flight_id = {last_flight_id} LIMIT 1;'
+        row = session.execute(statement).one()
+        return row
+    except:
+        print('ERROR: No flights found in the database.')
+        exit(1)
+
+
+def delete_flight(flight_id):
+    statement = f'DELETE FROM positional WHERE flight_id = {flight_id}'
+    try:
+        session.execute(statement)
+        print(f'Flight \'{flight_id}\' was deleted.')
+    except:
+        print(f'An error occurred while attempting to delete flight {flight_id}')
 
 
 def unix_time_millis():
@@ -96,4 +108,3 @@ def unix_time_millis():
     delta = dt - epoch
     seconds = delta.total_seconds()
     return long(seconds * 1000)
-
