@@ -25,17 +25,11 @@ class LogEvent:
 
 def main():
     global db_row
-    num_args = len(sys.argv)
     db_row = db_utilities.Positional()
-    if num_args <= -1:
-        print('\n**You must enter at least one command line argument (your name).')
-        print('**Optional arguments (in order): group, organization, major')
-        print('**Arguments with spaces must be enclosed in double or single quotes')
-        exit(1)
-    db_row.name = 'joe'
+    db_row.name = 'Test User'
     db_row.group = 'Test Group'
-    db_row.org_college = 'EMU'
-    db_row.major = 'Painting'
+    db_row.org_college = 'Test Org'
+    db_row.major = 'Test Major'
     initialize()
 
 

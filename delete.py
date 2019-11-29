@@ -7,7 +7,7 @@ def main():
     if num_args > 1:
         flight_to_delete = db_utilities.get_flight(sys.argv[1])
     else:
-        flight_to_delete = db_utilities.most_recent_flight()
+        flight_to_delete = db_utilities.most_recent_flight_from_station()
 
     confirm = input(f'Are you sure you want to delete the flight {flight_to_delete[0]} by '
                     f'{flight_to_delete[1]} {flight_to_delete[2]} (y/n): ')

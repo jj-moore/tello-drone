@@ -70,6 +70,12 @@ def validate_flight(flight_id):
     session.execute(statement)
 
 
+def invalidate_flight(flight_id):
+    connect_to_db()
+    statement = f'UPDATE positional SET valid = false WHERE flight_id = {flight_id}'
+    session.execute(statement)
+
+
 def get_flight(flight_id):
     connect_to_db()
     try:
@@ -85,9 +91,14 @@ def get_flight(flight_id):
         exit(1)
 
 
-def get_ordered_flights():
+def get_ordered_flights(station_id=None):
     connect_to_db()
-    statement = 'SELECT DISTINCT flight_id, latest_ts FROM positional;'
+
+    if station_id is None:
+        statement = 'SELECT DISTINCT flight_id, latest_ts FROM positional;'
+    else:
+        statement = f'SELECT DISTINCT flight_id, latest_ts FROM positional WHERE station_id = {station_id} ALLOW FILTERING;'
+
     rows = session.execute(statement)
     key_value = {}
     for row in rows:
@@ -96,16 +107,17 @@ def get_ordered_flights():
     return keys
 
 
-def most_recent_flight():
+def most_recent_flight_from_station():
     connect_to_db()
+    station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
     try:
-        rows = get_ordered_flights()
+        rows = get_ordered_flights(station_id)
         last_flight_id = rows[rows.__len__() - 1]
         statement = f'SELECT flight_id, name, org_college FROM positional WHERE flight_id = {last_flight_id} LIMIT 1;'
         row = session.execute(statement).one()
         return row
     except:
-        print('ERROR: No flights found in the database.')
+        print(f'ERROR: No flights found for station id {station_id}')
         exit(1)
 
 

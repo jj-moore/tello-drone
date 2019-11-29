@@ -9,12 +9,12 @@ def main():
     else:
         flight_to_validate = db_utilities.most_recent_flight_from_station()
 
-    confirm = input(f'Are you sure you want to validate the flight {flight_to_validate[0]} by '
+    confirm = input(f'Are you sure you want to invalidate the flight {flight_to_validate[0]} by '
                     f'{flight_to_validate[1]} {flight_to_validate[2]} (y/n): ')
     if confirm == 'y':
-        db_utilities.validate_flight(flight_to_validate[0])
+        db_utilities.invalidate_flight(flight_to_validate[0])
     else:
-        print(f'Validation cancelled.')
+        print(f'Invalidation cancelled.')
 
 
 if __name__ == '__main__':

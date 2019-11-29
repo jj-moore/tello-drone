@@ -1,4 +1,6 @@
 import datetime
+import uuid
+
 from dse.cluster import Cluster
 from dse.auth import PlainTextAuthProvider
 from numpy import long
@@ -37,7 +39,7 @@ def connect_to_db():
             session = cluster.connect('competition')
             print('Connected to Cassandra cluster.')
             get_flight_prepared = session.prepare(
-                f'SELECT flight_id, station_id, name, group, org_college, major, ts, latest_ts '
+                f'SELECT flight_id, station_id, name, group, org_college, major, ts, latest_ts, valid '
                 f'FROM positional WHERE flight_id = ? ORDER BY ts LIMIT 1;')
         except:
             print('Cannot connect to Cassandra cluster. Exiting ...')
@@ -62,22 +64,41 @@ def insert_record(positional):
     session.execute(statement)
 
 
-def flight_success(flight_id):
+def validate_flight(flight_id):
     connect_to_db()
     statement = f'UPDATE positional SET valid = true WHERE flight_id = {flight_id}'
     session.execute(statement)
 
 
+def invalidate_flight(flight_id):
+    connect_to_db()
+    statement = f'UPDATE positional SET valid = false WHERE flight_id = {flight_id}'
+    session.execute(statement)
+
+
 def get_flight(flight_id):
     connect_to_db()
-    bound_statement = get_flight_prepared.bind([flight_id])
-    flight = session.execute(bound_statement).one()
-    return flight
+    try:
+        if isinstance(flight_id, str):
+            flight_uuid = uuid.UUID(flight_id)
+        else:
+            flight_uuid = flight_id
+        bound_statement = get_flight_prepared.bind([flight_uuid])
+        flight = session.execute(bound_statement).one()
+        return flight
+    except:
+        print(f'Flight {flight_id} was not found')
+        exit(1)
 
 
-def get_ordered_flights():
+def get_ordered_flights(station_id=None):
     connect_to_db()
-    statement = 'SELECT DISTINCT flight_id, latest_ts FROM positional;'
+
+    if station_id is None:
+        statement = 'SELECT DISTINCT flight_id, latest_ts FROM positional;'
+    else:
+        statement = f'SELECT DISTINCT flight_id, latest_ts FROM positional WHERE station_id = {station_id} ALLOW FILTERING;'
+
     rows = session.execute(statement)
     key_value = {}
     for row in rows:
@@ -86,16 +107,17 @@ def get_ordered_flights():
     return keys
 
 
-def most_recent_flight():
+def most_recent_flight_from_station():
     connect_to_db()
+    station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
     try:
-        rows = get_ordered_flights()
+        rows = get_ordered_flights(station_id)
         last_flight_id = rows[rows.__len__() - 1]
         statement = f'SELECT flight_id, name, org_college FROM positional WHERE flight_id = {last_flight_id} LIMIT 1;'
         row = session.execute(statement).one()
         return row
     except:
-        print('ERROR: No flights found in the database.')
+        print(f'ERROR: No flights found for station id {station_id}')
         exit(1)
 
 
@@ -107,6 +129,15 @@ def delete_flight(flight_id):
         print(f'Flight \'{flight_id}\' was deleted.')
     except:
         print(f'An error occurred while attempting to delete flight {flight_id}')
+
+
+def update_flight_in_progress(flight_id):
+    statement = f'UPDATE positional USING TTL 25 SET valid = false WHERE flight_id = {flight_id}'
+    connect_to_db()
+    try:
+        session.execute(statement)
+    except:
+        pass
 
 
 def unix_time_millis():

@@ -94,22 +94,27 @@ def web_stop():
     db_row = None
 
 
+# common start point for both web and command line entry points
+# sets station_id and flight_id, initializes joystick and drone
+# starts video thread, starts flight update thread (sets valid to false periodically)
 def initialize(is_resume=False):
+    db_row.station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
     if is_resume:
-        row = db_utilities.most_recent_flight()
+        row = db_utilities.most_recent_flight_from_station()
         print(f'Continuing flight {row[0]}')
         db_row.flight_id = row[0]
     else:
         print(f'Hello {db_row.name}!')
         db_row.flight_id = uuid.uuid1()
 
-    db_row.station_id = uuid.uuid3(uuid.NAMESPACE_URL, hex(uuid.getnode()))
     initialize_joystick()
     initialize_drone()
+    threading.Thread(target=video_thread).start()
     threading.Thread(target=validate_flight, args=db_row.flight_id).start()
     run()
 
 
+# detects joystick and sets buttons
 def initialize_joystick():
     global buttons
     global js_name
@@ -145,6 +150,7 @@ def initialize_joystick():
     print(f'Connected to joystick connected: {js_name}')
 
 
+# connects to drone, sets log level, adds handlers for event data
 def initialize_drone():
     global drone
     drone = tellopy.Tello()
@@ -155,15 +161,17 @@ def initialize_drone():
     drone.subscribe(drone.EVENT_FLIGHT_DATA, flight_data_handler)
     drone.subscribe(drone.EVENT_LOG_DATA, log_data_handler)
     drone.set_loglevel(drone.LOG_WARN)
-    threading.Thread(target=video_thread).start()
 
 
+# updates valid field to false every 20 seconds
+# flights with valid=false do not show up in leaderboard
 def validate_flight(flight_id):
     while True:
         db_utilities.update_flight_in_progress(flight_id)
         time.sleep(20.0)
 
 
+# continually listens for joystick events
 def run():
     global new_image
     global current_image
@@ -192,9 +200,11 @@ def run():
 def stop():
     global show_video
     show_video = False
-    time.sleep(100)
+    time.sleep(300)
     success = input("Was flight successful (y/n)? ")
-    if success.upper() != "N":
+    if success.upper() == "N":
+        db_utilities.invalidate_flight(db_row.flight_id)
+    else:
         db_utilities.validate_flight(db_row.flight_id)
     cv2.destroyAllWindows()
     drone.quit()
@@ -249,11 +259,14 @@ def draw_text_on_video(image, text, row):
     cv2.putText(image, text, pos, font, font_scale, font_color, 1)
 
 
+# setting flight data to global handler so it can print later
 def flight_data_handler(event, sender, data, **args):
     global flight_data
     flight_data = data
 
 
+# inserts row if x, y or z changes.
+# if flight_data exists, prints it.
 def log_data_handler(event, sender, data, **args):
     if db_row is not None:
         cur_x = round(data.mvo.pos_x, 2)
