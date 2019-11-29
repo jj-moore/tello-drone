@@ -32,7 +32,7 @@ def connect_to_db():
     global get_flight_prepared
 
     if session is None:
-        contact_points = get_ips("ips_jeremy_local.txt")
+        contact_points = get_ips('ips.txt')
         auth_provider = PlainTextAuthProvider(username='cassandra', password='eagles29')
         cluster = Cluster(auth_provider=auth_provider, contact_points=contact_points)
         try:
