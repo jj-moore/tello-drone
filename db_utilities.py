@@ -37,7 +37,6 @@ def connect_to_db():
         cluster = Cluster(auth_provider=auth_provider, contact_points=contact_points)
         try:
             session = cluster.connect('competition')
-            print('Connected to Cassandra cluster.')
             get_flight_prepared = session.prepare(
                 f'SELECT flight_id, station_id, name, group, org_college, major, ts, latest_ts, valid '
                 f'FROM positional WHERE flight_id = ? ORDER BY ts LIMIT 1;')
@@ -67,13 +66,14 @@ def insert_record(positional):
 def validate_flight(flight_id):
     connect_to_db()
     statement = f'UPDATE positional SET valid = true WHERE flight_id = {flight_id}'
-    session.execute(statement)
+    session.execute_async(statement)
 
 
 def invalidate_flight(flight_id):
     connect_to_db()
     statement = f'UPDATE positional SET valid = false WHERE flight_id = {flight_id}'
     session.execute(statement)
+    session.shutdown()
 
 
 def get_flight(flight_id):

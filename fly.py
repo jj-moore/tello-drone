@@ -1,7 +1,6 @@
 import sys
 import traceback
 import tellopy
-import av
 import cv2.cv2 as cv2  # for avoidance of pylint error
 import numpy
 import pygame
@@ -10,6 +9,7 @@ import pygame.key
 import threading
 import time
 import uuid
+import av
 
 # custom files
 import db_utilities
@@ -28,7 +28,7 @@ roll = 0.0
 # video settings
 new_image = None
 current_image = None
-show_video = False
+run_thread = True
 
 flight_data = None  # log data
 drone = None  # Tellopy object
@@ -64,37 +64,6 @@ def main():
     initialize(is_resume)
 
 
-# Web application entry point
-def web_start(user):
-    global db_row
-    db_row = db_utilities.Positional()
-    db_row.name = user.name
-    db_row.group = user.type
-    db_row.org_college = user.organization
-    db_row.major = user.major
-    initialize()
-
-
-#  Land drone for failed flight but leave connections and video intact
-def web_cancel():
-    global db_row
-    global show_video
-    drone.land()
-    show_video = False
-    db_row = None
-
-
-#  Land drone for successful flight but leave connections and video intact
-def web_stop():
-    global db_row
-    global show_video
-    drone.land()
-    show_video = False
-    db_utilities.validate_flight(db_row.flight_id)
-    db_row = None
-
-
-# common start point for both web and command line entry points
 # sets station_id and flight_id, initializes joystick and drone
 # starts video thread, starts flight update thread (sets valid to false periodically)
 def initialize(is_resume=False):
@@ -107,11 +76,8 @@ def initialize(is_resume=False):
         print(f'Hello {db_row.name}!')
         db_row.flight_id = uuid.uuid1()
 
-    initialize_joystick()
+    # initialize_joystick()
     initialize_drone()
-    threading.Thread(target=video_thread).start()
-    threading.Thread(target=validate_flight, args=db_row.flight_id).start()
-    run()
 
 
 # detects joystick and sets buttons
@@ -161,14 +127,10 @@ def initialize_drone():
     drone.subscribe(drone.EVENT_FLIGHT_DATA, flight_data_handler)
     drone.subscribe(drone.EVENT_LOG_DATA, log_data_handler)
     drone.set_loglevel(drone.LOG_WARN)
-
-
-# updates valid field to false every 20 seconds
-# flights with valid=false do not show up in leaderboard
-def validate_flight(flight_id):
-    while True:
-        db_utilities.update_flight_in_progress(flight_id)
-        time.sleep(20.0)
+    if drone.video_enabled:
+        threading.Thread(target=video_thread, name='video').start()
+    threading.Timer(20.0, db_utilities.update_flight_in_progress, args=[db_row.flight_id])
+    run()
 
 
 # continually listens for joystick events
@@ -177,7 +139,7 @@ def run():
     global current_image
 
     try:
-        while 1:
+        while True:
             # loop with pygame.event.get() is too much tight w/o some sleep
             time.sleep(0.01)
             for e in pygame.event.get():
@@ -196,31 +158,32 @@ def run():
     stop()
 
 
-#  command line stop
 def stop():
-    global show_video
-    show_video = False
-    time.sleep(300)
-    success = input("Was flight successful (y/n)? ")
+    global run_thread
+    run_thread = False
+
+    success = input('Was flight successful (y/n)? ')
+    print('Updating database ...')
+    cv2.destroyAllWindows()
+    drone.quit()
+
     if success.upper() == "N":
         db_utilities.invalidate_flight(db_row.flight_id)
     else:
         db_utilities.validate_flight(db_row.flight_id)
-    cv2.destroyAllWindows()
-    drone.quit()
-    exit(1)
+
+    print(f'Goodbye {db_row.name}')
+    exit(0)
 
 
 def video_thread():
     global new_image
-    global show_video
     print('start video_thread()')
-    show_video = True
     try:
-        container = av.open(drone.get_video_stream())
+        container = av.open(file=drone.get_video_stream(), mode='r')
         # skip first 300 frames
         frame_skip = 300
-        while show_video:
+        while run_thread:
             for frame in container.decode(video=0):
                 if 0 < frame_skip:
                     frame_skip = frame_skip - 1
